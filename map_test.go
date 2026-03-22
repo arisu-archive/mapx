@@ -904,4 +904,90 @@ var _ = Describe("OrderedMap", func() {
 			})
 		})
 	})
+
+	Describe("IsZero", func() {
+		It("should return true for a new empty map", func() {
+			om := mapx.New[string, int]()
+			Expect(om.IsZero()).To(BeTrue())
+		})
+
+		It("should return true for a zero-value receiver", func() {
+			var om mapx.OrderedMap[string, int]
+			Expect(om.IsZero()).To(BeTrue())
+		})
+
+		It("should return false after adding an entry", func() {
+			om := mapx.New[string, int]()
+			om.Set("a", 1)
+			Expect(om.IsZero()).To(BeFalse())
+		})
+
+		It("should return true after removing all entries", func() {
+			om := mapx.New[string, int]()
+			om.Set("a", 1)
+			om.Delete("a")
+			Expect(om.IsZero()).To(BeTrue())
+		})
+
+		It("should return true after Clear", func() {
+			om := mapx.New[string, int]()
+			om.Set("a", 1)
+			om.Set("b", 2)
+			om.Clear()
+			Expect(om.IsZero()).To(BeTrue())
+		})
+	})
+
+	Describe("omitempty", func() {
+		type wrapper struct {
+			Name  string                        `json:"name"`
+			Items *mapx.OrderedMap[string, int] `json:"items,omitempty"`
+		}
+
+		It("should omit a nil OrderedMap field", func() {
+			w := wrapper{Name: "test"}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test"}`))
+		})
+
+		It("should include a non-empty OrderedMap field", func() {
+			items := mapx.New[string, int]()
+			items.Set("x", 42)
+			w := wrapper{Name: "test", Items: items}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test","items":{"x":42}}`))
+		})
+	})
+
+	Describe("omitzero", func() {
+		type wrapper struct {
+			Name  string                        `json:"name"`
+			Items *mapx.OrderedMap[string, int] `json:"items,omitzero"`
+		}
+
+		It("should omit a nil OrderedMap field", func() {
+			w := wrapper{Name: "test"}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test"}`))
+		})
+
+		It("should omit an empty non-nil OrderedMap field", func() {
+			w := wrapper{Name: "test", Items: mapx.New[string, int]()}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test"}`))
+		})
+
+		It("should include a non-empty OrderedMap field", func() {
+			items := mapx.New[string, int]()
+			items.Set("x", 42)
+			w := wrapper{Name: "test", Items: items}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test","items":{"x":42}}`))
+		})
+	})
 })
