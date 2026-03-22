@@ -34,6 +34,12 @@ func (om *OrderedMap[K, V]) Len() int {
 	return len(om.m)
 }
 
+// IsZero reports whether the map contains no entries.
+// This enables encoding/json to respect omitempty and omitzero struct tags.
+func (om *OrderedMap[K, V]) IsZero() bool {
+	return len(om.m) == 0
+}
+
 // Has reports whether k exists.
 func (om *OrderedMap[K, V]) Has(k K) bool {
 	_, ok := om.m[k]
