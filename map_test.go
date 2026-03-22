@@ -310,6 +310,117 @@ var _ = Describe("OrderedMap", func() {
 			})
 		})
 
+		Context("with int8 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[int8, string]()
+				om.Set(1, "one")
+				om.Set(-2, "neg two")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"1":"one","-2":"neg two"}`))
+			})
+		})
+
+		Context("with int16 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[int16, string]()
+				om.Set(300, "three hundred")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"300":"three hundred"}`))
+			})
+		})
+
+		Context("with int32 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[int32, string]()
+				om.Set(100000, "big")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"100000":"big"}`))
+			})
+		})
+
+		Context("with int64 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[int64, string]()
+				om.Set(9999999999, "huge")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"9999999999":"huge"}`))
+			})
+		})
+
+		Context("with uint keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[uint, string]()
+				om.Set(42, "answer")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"42":"answer"}`))
+			})
+		})
+
+		Context("with uint8 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[uint8, string]()
+				om.Set(255, "max")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"255":"max"}`))
+			})
+		})
+
+		Context("with uint16 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[uint16, string]()
+				om.Set(65535, "max")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"65535":"max"}`))
+			})
+		})
+
+		Context("with uint32 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[uint32, string]()
+				om.Set(4294967295, "max")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"4294967295":"max"}`))
+			})
+		})
+
+		Context("with uint64 keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[uint64, string]()
+				om.Set(18446744073709551615, "max")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"18446744073709551615":"max"}`))
+			})
+		})
+
+		Context("with uintptr keys", func() {
+			It("should quote keys as strings", func() {
+				om := mapx.New[uintptr, string]()
+				om.Set(12345, "ptr")
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"12345":"ptr"}`))
+			})
+		})
+
 		Context("with TextMarshaler keys", func() {
 			It("should use MarshalText for key encoding", func() {
 				om := mapx.New[textKey, int]()
@@ -318,6 +429,121 @@ var _ = Describe("OrderedMap", func() {
 				b, err := json.Marshal(om)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(b)).To(Equal(`{"foo:bar":1}`))
+			})
+		})
+
+		Context("with unsupported key type", func() {
+			It("should return an error", func() {
+				om := mapx.New[float64, string]()
+				om.Set(1.5, "x")
+
+				_, err := json.Marshal(om)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("with boolean values", func() {
+			It("should marshal true and false", func() {
+				om := mapx.New[string, bool]()
+				om.Set("yes", true)
+				om.Set("no", false)
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"yes":true,"no":false}`))
+			})
+		})
+
+		Context("with float values", func() {
+			It("should marshal float64 numbers", func() {
+				om := mapx.New[string, float64]()
+				om.Set("pi", 3.14)
+				om.Set("neg", -0.5)
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"pi":3.14,"neg":-0.5}`))
+			})
+		})
+
+		Context("with nil/pointer values", func() {
+			It("should marshal nil pointers as null", func() {
+				om := mapx.New[string, *int]()
+				v := 42
+				om.Set("present", &v)
+				om.Set("absent", nil)
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"present":42,"absent":null}`))
+			})
+		})
+
+		Context("with slice/array values", func() {
+			It("should marshal slices as JSON arrays", func() {
+				om := mapx.New[string, []int]()
+				om.Set("nums", []int{1, 2, 3})
+				om.Set("empty", []int{})
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"nums":[1,2,3],"empty":[]}`))
+			})
+		})
+
+		Context("with nested object values", func() {
+			It("should marshal struct values as JSON objects", func() {
+				type inner struct {
+					X int    `json:"x"`
+					Y string `json:"y"`
+				}
+				om := mapx.New[string, inner]()
+				om.Set("point", inner{X: 10, Y: "hello"})
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"point":{"x":10,"y":"hello"}}`))
+			})
+		})
+
+		Context("with map values", func() {
+			It("should marshal map values as JSON objects", func() {
+				om := mapx.New[string, map[string]int]()
+				om.Set("scores", map[string]int{"a": 1})
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"scores":{"a":1}}`))
+			})
+		})
+
+		Context("with interface{} values", func() {
+			It("should marshal mixed JSON types", func() {
+				om := mapx.New[string, any]()
+				om.Set("str", "hello")
+				om.Set("num", 42)
+				om.Set("bool", true)
+				om.Set("null", nil)
+				om.Set("arr", []int{1, 2})
+
+				b, err := json.Marshal(om)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"str":"hello","num":42,"bool":true,"null":null,"arr":[1,2]}`))
+			})
+		})
+
+		Context("with nested OrderedMap values", func() {
+			It("should recursively marshal nested ordered maps", func() {
+				child := mapx.New[string, int]()
+				child.Set("b", 2)
+				child.Set("a", 1)
+
+				parent := mapx.New[string, *mapx.OrderedMap[string, int]]()
+				parent.Set("nested", child)
+
+				b, err := json.Marshal(parent)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(b)).To(Equal(`{"nested":{"b":2,"a":1}}`))
 			})
 		})
 	})
@@ -358,6 +584,107 @@ var _ = Describe("OrderedMap", func() {
 			})
 		})
 
+		Context("with int8 keys", func() {
+			It("should parse string-encoded int8 keys", func() {
+				data := []byte(`{"1":"one","-2":"neg two"}`)
+				om := mapx.New[int8, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]int8{1, -2}))
+				Expect(om.Values()).To(Equal([]string{"one", "neg two"}))
+			})
+		})
+
+		Context("with int16 keys", func() {
+			It("should parse string-encoded int16 keys", func() {
+				data := []byte(`{"300":"x"}`)
+				om := mapx.New[int16, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]int16{300}))
+			})
+		})
+
+		Context("with int32 keys", func() {
+			It("should parse string-encoded int32 keys", func() {
+				data := []byte(`{"100000":"x"}`)
+				om := mapx.New[int32, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]int32{100000}))
+			})
+		})
+
+		Context("with int64 keys", func() {
+			It("should parse string-encoded int64 keys", func() {
+				data := []byte(`{"9999999999":"x"}`)
+				om := mapx.New[int64, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]int64{9999999999}))
+			})
+		})
+
+		Context("with uint keys", func() {
+			It("should parse string-encoded uint keys", func() {
+				data := []byte(`{"42":"answer"}`)
+				om := mapx.New[uint, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]uint{42}))
+			})
+		})
+
+		Context("with uint8 keys", func() {
+			It("should parse string-encoded uint8 keys", func() {
+				data := []byte(`{"255":"max"}`)
+				om := mapx.New[uint8, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]uint8{255}))
+			})
+		})
+
+		Context("with uint16 keys", func() {
+			It("should parse string-encoded uint16 keys", func() {
+				data := []byte(`{"65535":"max"}`)
+				om := mapx.New[uint16, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]uint16{65535}))
+			})
+		})
+
+		Context("with uint32 keys", func() {
+			It("should parse string-encoded uint32 keys", func() {
+				data := []byte(`{"4294967295":"max"}`)
+				om := mapx.New[uint32, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]uint32{4294967295}))
+			})
+		})
+
+		Context("with uint64 keys", func() {
+			It("should parse string-encoded uint64 keys", func() {
+				data := []byte(`{"18446744073709551615":"max"}`)
+				om := mapx.New[uint64, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]uint64{18446744073709551615}))
+			})
+		})
+
+		Context("with uintptr keys", func() {
+			It("should parse string-encoded uintptr keys", func() {
+				data := []byte(`{"12345":"ptr"}`)
+				om := mapx.New[uintptr, string]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]uintptr{12345}))
+			})
+		})
+
 		Context("with TextUnmarshaler keys", func() {
 			It("should use UnmarshalText for key decoding", func() {
 				data := []byte(`{"foo:bar":1}`)
@@ -368,6 +695,132 @@ var _ = Describe("OrderedMap", func() {
 				keys := om.Keys()
 				Expect(keys).To(HaveLen(1))
 				Expect(keys[0]).To(Equal(textKey{A: "foo", B: "bar"}))
+			})
+		})
+
+		Context("with unsupported key type", func() {
+			It("should return an error", func() {
+				data := []byte(`{"1.5":"x"}`)
+				om := mapx.New[float64, string]()
+
+				err := json.Unmarshal(data, om)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("with boolean values", func() {
+			It("should decode true and false", func() {
+				data := []byte(`{"yes":true,"no":false}`)
+				om := mapx.New[string, bool]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]string{"yes", "no"}))
+
+				v1, _ := om.Get("yes")
+				v2, _ := om.Get("no")
+				Expect(v1).To(BeTrue())
+				Expect(v2).To(BeFalse())
+			})
+		})
+
+		Context("with float values", func() {
+			It("should decode float64 numbers", func() {
+				data := []byte(`{"pi":3.14,"neg":-0.5}`)
+				om := mapx.New[string, float64]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]string{"pi", "neg"}))
+
+				v1, _ := om.Get("pi")
+				v2, _ := om.Get("neg")
+				Expect(v1).To(BeNumerically("~", 3.14))
+				Expect(v2).To(BeNumerically("~", -0.5))
+			})
+		})
+
+		Context("with null values", func() {
+			It("should decode null as nil pointer", func() {
+				data := []byte(`{"present":42,"absent":null}`)
+				om := mapx.New[string, *int]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]string{"present", "absent"}))
+
+				v1, _ := om.Get("present")
+				v2, _ := om.Get("absent")
+				Expect(*v1).To(Equal(42))
+				Expect(v2).To(BeNil())
+			})
+		})
+
+		Context("with array values", func() {
+			It("should decode JSON arrays into slices", func() {
+				data := []byte(`{"nums":[1,2,3],"empty":[]}`)
+				om := mapx.New[string, []int]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]string{"nums", "empty"}))
+
+				v1, _ := om.Get("nums")
+				v2, _ := om.Get("empty")
+				Expect(v1).To(Equal([]int{1, 2, 3}))
+				Expect(v2).To(BeEmpty())
+			})
+		})
+
+		Context("with nested object values", func() {
+			It("should decode JSON objects into structs", func() {
+				type inner struct {
+					X int    `json:"x"`
+					Y string `json:"y"`
+				}
+				data := []byte(`{"point":{"x":10,"y":"hello"}}`)
+				om := mapx.New[string, inner]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				v, ok := om.Get("point")
+				Expect(ok).To(BeTrue())
+				Expect(v.X).To(Equal(10))
+				Expect(v.Y).To(Equal("hello"))
+			})
+		})
+
+		Context("with interface{} values", func() {
+			It("should decode mixed JSON types", func() {
+				data := []byte(`{"str":"hello","num":42,"bool":true,"null":null,"arr":[1,2]}`)
+				om := mapx.New[string, any]()
+
+				Expect(json.Unmarshal(data, om)).To(Succeed())
+				Expect(om.Keys()).To(Equal([]string{"str", "num", "bool", "null", "arr"}))
+
+				v1, _ := om.Get("str")
+				Expect(v1).To(Equal("hello"))
+
+				v2, _ := om.Get("num")
+				Expect(v2).To(BeNumerically("==", 42))
+
+				v3, _ := om.Get("bool")
+				Expect(v3).To(Equal(true))
+
+				v4, _ := om.Get("null")
+				Expect(v4).To(BeNil())
+
+				v5, _ := om.Get("arr")
+				Expect(v5).To(HaveLen(2))
+			})
+		})
+
+		Context("with nested OrderedMap values", func() {
+			It("should recursively unmarshal nested ordered maps", func() {
+				data := []byte(`{"nested":{"b":2,"a":1}}`)
+				parent := mapx.New[string, *mapx.OrderedMap[string, int]]()
+
+				Expect(json.Unmarshal(data, parent)).To(Succeed())
+
+				child, ok := parent.Get("nested")
+				Expect(ok).To(BeTrue())
+				Expect(child.Keys()).To(Equal([]string{"b", "a"}))
+				Expect(child.Values()).To(Equal([]int{2, 1}))
 			})
 		})
 
@@ -387,6 +840,154 @@ var _ = Describe("OrderedMap", func() {
 				Expect(restored.Keys()).To(Equal(original.Keys()))
 				Expect(restored.Values()).To(Equal(original.Values()))
 			})
+
+			It("should round-trip boolean values", func() {
+				original := mapx.New[string, bool]()
+				original.Set("t", true)
+				original.Set("f", false)
+
+				b, err := json.Marshal(original)
+				Expect(err).NotTo(HaveOccurred())
+
+				restored := mapx.New[string, bool]()
+				Expect(json.Unmarshal(b, restored)).To(Succeed())
+				Expect(restored.Keys()).To(Equal(original.Keys()))
+				Expect(restored.Values()).To(Equal(original.Values()))
+			})
+
+			It("should round-trip float values", func() {
+				original := mapx.New[string, float64]()
+				original.Set("pi", 3.14)
+				original.Set("e", 2.718)
+
+				b, err := json.Marshal(original)
+				Expect(err).NotTo(HaveOccurred())
+
+				restored := mapx.New[string, float64]()
+				Expect(json.Unmarshal(b, restored)).To(Succeed())
+				Expect(restored.Keys()).To(Equal(original.Keys()))
+				Expect(restored.Values()).To(Equal(original.Values()))
+			})
+
+			It("should round-trip slice values", func() {
+				original := mapx.New[string, []string]()
+				original.Set("tags", []string{"go", "json"})
+				original.Set("empty", []string{})
+
+				b, err := json.Marshal(original)
+				Expect(err).NotTo(HaveOccurred())
+
+				restored := mapx.New[string, []string]()
+				Expect(json.Unmarshal(b, restored)).To(Succeed())
+				Expect(restored.Keys()).To(Equal(original.Keys()))
+				Expect(restored.Values()).To(Equal(original.Values()))
+			})
+
+			It("should round-trip nested OrderedMap values", func() {
+				child := mapx.New[string, int]()
+				child.Set("b", 2)
+				child.Set("a", 1)
+
+				original := mapx.New[string, *mapx.OrderedMap[string, int]]()
+				original.Set("inner", child)
+
+				b, err := json.Marshal(original)
+				Expect(err).NotTo(HaveOccurred())
+
+				restored := mapx.New[string, *mapx.OrderedMap[string, int]]()
+				Expect(json.Unmarshal(b, restored)).To(Succeed())
+
+				restoredChild, ok := restored.Get("inner")
+				Expect(ok).To(BeTrue())
+				Expect(restoredChild.Keys()).To(Equal(child.Keys()))
+				Expect(restoredChild.Values()).To(Equal(child.Values()))
+			})
+		})
+	})
+
+	Describe("IsZero", func() {
+		It("should return true for a new empty map", func() {
+			om := mapx.New[string, int]()
+			Expect(om.IsZero()).To(BeTrue())
+		})
+
+		It("should return true for a zero-value receiver", func() {
+			var om mapx.OrderedMap[string, int]
+			Expect(om.IsZero()).To(BeTrue())
+		})
+
+		It("should return false after adding an entry", func() {
+			om := mapx.New[string, int]()
+			om.Set("a", 1)
+			Expect(om.IsZero()).To(BeFalse())
+		})
+
+		It("should return true after removing all entries", func() {
+			om := mapx.New[string, int]()
+			om.Set("a", 1)
+			om.Delete("a")
+			Expect(om.IsZero()).To(BeTrue())
+		})
+
+		It("should return true after Clear", func() {
+			om := mapx.New[string, int]()
+			om.Set("a", 1)
+			om.Set("b", 2)
+			om.Clear()
+			Expect(om.IsZero()).To(BeTrue())
+		})
+	})
+
+	Describe("omitempty", func() {
+		type wrapper struct {
+			Name  string                        `json:"name"`
+			Items *mapx.OrderedMap[string, int] `json:"items,omitempty"`
+		}
+
+		It("should omit a nil OrderedMap field", func() {
+			w := wrapper{Name: "test"}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test"}`))
+		})
+
+		It("should include a non-empty OrderedMap field", func() {
+			items := mapx.New[string, int]()
+			items.Set("x", 42)
+			w := wrapper{Name: "test", Items: items}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test","items":{"x":42}}`))
+		})
+	})
+
+	Describe("omitzero", func() {
+		type wrapper struct {
+			Name  string                        `json:"name"`
+			Items *mapx.OrderedMap[string, int] `json:"items,omitzero"`
+		}
+
+		It("should omit a nil OrderedMap field", func() {
+			w := wrapper{Name: "test"}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test"}`))
+		})
+
+		It("should omit an empty non-nil OrderedMap field", func() {
+			w := wrapper{Name: "test", Items: mapx.New[string, int]()}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test"}`))
+		})
+
+		It("should include a non-empty OrderedMap field", func() {
+			items := mapx.New[string, int]()
+			items.Set("x", 42)
+			w := wrapper{Name: "test", Items: items}
+			b, err := json.Marshal(w)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(b)).To(Equal(`{"name":"test","items":{"x":42}}`))
 		})
 	})
 })
